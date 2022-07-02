@@ -1,34 +1,40 @@
-@import 'mixins/mixins';
-@import 'mixins/utils';
-@import 'common/var';
-@import 'select-dropdown-v2';
-@import 'input';
-@import 'tag';
-@import 'option-item';
-@import 'option-group';
-@import 'scrollbar';
+@use 'sass:map';
 
-$--input-inline-start: 7px !default;
+@use 'mixins/mixins' as *;
+@use 'mixins/utils' as *;
+@use 'mixins/var' as *;
+@use 'common/var' as *;
+@use './select-dropdown-v2.scss';
+@use './option-item.scss';
+@use './option-group.scss';
+@use './select/common.scss' as *;
+
+$input-inline-start: map.get($input-padding-horizontal, 'default') !default;
+
+@include b(select-v2) {
+  @include set-component-css-var('select', $select);
+}
 
 @include b(select-v2) {
   display: inline-block;
   position: relative;
-
+  vertical-align: middle;
+  font-size: map.get($input-font-size, 'default');
   $selector: &;
   @include e(wrapper) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
     box-sizing: border-box;
     cursor: pointer;
-
-    padding-left: 15px;
-    padding-right: 30px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    border: 1px solid $--border-color-base;
-    border-radius: $--border-radius-base;
-    transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-
+    padding: 1px 30px 1px 0;
+    border: 1px solid getCssVar('border-color');
+    border-radius: getCssVar('border-radius-base');
+    transition: border-color getCssVar('transition-duration-fast')
+      getCssVar('ease-in-out-bezier-function');
     &:hover {
-      border-color: $--color-text-placeholder;
+      border-color: getCssVar('text-color', 'placeholder');
     }
 
     @include when(filterable) {
@@ -36,56 +42,60 @@ $--input-inline-start: 7px !default;
     }
 
     @include when(focused) {
-      border-color: $--color-primary;
+      border-color: getCssVar('color-primary');
     }
 
     @include when(hovering) {
       &:not(.is-focused) {
-        border-color: $--color-text-placeholder;
+        border-color: getCssVar('text-color', 'placeholder');
       }
     }
 
     @include when(disabled) {
       cursor: not-allowed;
 
-      background-color: $--background-color-base;
-      color: $--color-text-placeholder;
-      border-color: $--select-disabled-border;
+      background-color: getCssVar('fill-color', 'light');
+      color: getCssVar('text-color', 'placeholder');
+      border-color: getCssVar('select-disabled-border');
 
       &:hover {
-        border-color: $--select-disabled-border;
+        border-color: getCssVar('select-disabled-border');
       }
 
       &.is-focus {
-        border-color: $--select-input-focus-border-color;
+        border-color: getCssVar('input-focus-border-color');
       }
 
       .is-transparent {
         opacity: 1;
         user-select: none;
       }
+
+      #{$selector}__caret {
+        cursor: not-allowed;
+      }
+
+      #{$selector}__combobox-input {
+        cursor: not-allowed;
+      }
     }
 
     #{$selector}__input-wrapper {
       box-sizing: border-box;
       position: relative;
-      padding-bottom: 2px;
-      margin-inline-start: $--input-inline-start;
-      padding-top: 2px;
+      margin-inline-start: $input-inline-start;
       max-width: 100%;
       overflow: hidden;
     }
 
     &,
     #{$selector}__input-wrapper {
-      line-height: $--input-height;
-      // height: $--input-height;
+      line-height: map.get($input-height, 'default');
     }
 
     #{$selector}__input-wrapper input {
-      line-height: $--input-medium-height;
-      height: $--input-medium-height;
-
+      line-height: map.get($input-height, 'default') - 8px;
+      height: map.get($input-height, 'default') - 8px;
       min-width: 4px;
       width: 100%;
 
@@ -96,70 +106,46 @@ $--input-inline-start: 7px !default;
       background: 0 0;
       border: none;
 
-      margin: 0;
+      margin: 2px 0;
       outline: none;
       padding: 0;
     }
   }
 
+  @include select-common(select-v2);
+
   @include e(empty) {
     padding: 10px 0;
     margin: 0;
     text-align: center;
-    color: #999;
+    color: getCssVar('text-color', 'secondary');
     font-size: 14px;
   }
 
   @include e(popper) {
     @include picker-popper(
-      $--select-dropdown-background,
-      $--select-dropdown-border,
-      $--select-dropdown-shadow
+      map.get($select-dropdown, 'bg-color'),
+      map.get($select-dropdown, 'border'),
+      map.get($select-dropdown, 'shadow')
     );
   }
 
-  @include m(mini) {
-    @include e(wrapper) {
-      &,
-      #{$selector}__input-wrapper {
-        // since there were no 24px predefined, we can only hand write here.
-        line-height: $--input-mini-height;
-        // height: $--input-mini-height;
+  @each $size in (large, small) {
+    @include m($size) {
+      @include e(wrapper) {
+        #{$selector}__combobox-input {
+          height: map.get($input-height, $size) - 8px;
+        }
       }
-
-      #{$selector}__input-wrapper input {
-        line-height: 24px;
-        height: 24px;
+      @include e(caret) {
+        height: map.get($input-height, $size);
       }
-    }
-  }
-
-  @include m(small) {
-    @include e(wrapper) {
-      &,
-      #{$selector}__input-wrapper {
-        line-height: $--input-small-height;
-        // height: $--input-small-height;
+      @include e(suffix) {
+        height: map.get($input-height, $size);
       }
-
-      #{$selector}__input-wrapper input {
-        line-height: $--input-mini-height;
-        height: $--input-mini-height;
-      }
-    }
-  }
-
-  @include m(medium) {
-    @include e(wrapper) {
-      &,
-      #{$selector}__input-wrapper {
-        line-height: $--input-medium-height;
-        // height: $--input-medium-height;
-      }
-
-      #{$selector}__input-wrapper input {
-        line-height: $--input-small-height;
-        height: $--input-small-height;
+      @include e(placeholder) {
+        font-size: map.get($input-font-size, $size);
+        line-height: map.get($input-line-height, $size);
       }
     }
   }
@@ -170,7 +156,7 @@ $--input-inline-start: 7px !default;
 
   &:hover {
     #{$selector}__combobox-input {
-      border-color: $--select-border-color-hover;
+      border-color: getCssVar('select-border-color-hover');
     }
   }
 
@@ -186,7 +172,7 @@ $--input-inline-start: 7px !default;
     display: block;
 
     &:focus {
-      border-color: $--select-input-focus-border-color;
+      border-color: getCssVar('select-input-focus-border-color');
     }
   }
 
@@ -195,12 +181,12 @@ $--input-inline-start: 7px !default;
     outline: none;
     padding: 0;
     margin-left: 15px;
-    color: $--select-multiple-input-color;
-    font-size: $--select-font-size;
+    color: getCssVar('select-multiple-input-color');
+    font-size: getCssVar('select-font-size');
     appearance: none;
     height: 28px;
 
-    @include when(mini) {
+    @include when(small) {
       height: 14px;
     }
   }
@@ -209,29 +195,38 @@ $--input-inline-start: 7px !default;
     cursor: pointer;
     position: absolute;
     top: 8px;
-    z-index: $--index-top;
+    z-index: getCssVar('index-top');
     right: 25px;
-    color: $--select-input-color;
+    color: getCssVar('select-input-color');
     line-height: 18px;
-    font-size: $--select-input-font-size;
+    font-size: getCssVar('select-input-font-size');
 
     &:hover {
-      color: $--select-close-hover-color;
+      color: getCssVar('select-close-hover-color');
     }
   }
 
   @include e(suffix) {
+    display: inline-flex;
     position: absolute;
-    right: 5px;
-    height: 40px;
+    right: 12px;
+    height: 32px;
     top: 50%;
-    margin-top: -20px;
+    transform: translateY(-50%);
+    color: var(
+      #{getCssVarName('input-icon-color')},
+      map.get($input, 'icon-color')
+    );
+
+    .#{$namespace}-input__icon {
+      height: inherit;
+    }
   }
 
   @include e(caret) {
-    color: $--select-input-color;
-    font-size: $--select-input-font-size;
-    transition: transform 0.3s;
+    color: getCssVar('select-input-color');
+    font-size: getCssVar('select-input-font-size');
+    transition: transform getCssVar('transition-duration');
     transform: rotateZ(180deg);
     cursor: pointer;
 
@@ -240,33 +235,41 @@ $--input-inline-start: 7px !default;
     }
 
     @include when(show-close) {
-      font-size: $--select-font-size;
+      font-size: getCssVar('select-font-size');
       text-align: center;
       transform: rotateZ(180deg);
-      border-radius: $--border-radius-circle;
-      color: $--select-input-color;
-      transition: $--color-transition-base;
+      border-radius: getCssVar('border-radius-circle');
+      color: getCssVar('select-input-color');
+      transition: getCssVar('transition', 'color');
 
       &:hover {
-        color: $--select-close-hover-color;
+        color: getCssVar('select', 'close-hover-color');
+      }
+    }
+
+    &.#{$namespace}-icon {
+      height: inherit;
+      svg {
+        vertical-align: middle;
       }
     }
   }
 
   @include e(selection) {
     white-space: normal;
-    z-index: $--index-normal;
+    z-index: getCssVar('index-normal');
     display: flex;
     align-items: center;
     flex-wrap: wrap;
   }
 
   @include e(wrapper) {
-    background-color: #fff;
-    border: 1px solid #d9d9d9;
-    border-radius: $--border-radius-base;
+    background-color: getCssVar('fill-color', 'blank');
+    border: 1px solid getCssVar('border-color');
+    border-radius: getCssVar('border-radius-base');
     position: relative;
-    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: all getCssVar('transition-duration')
+      getCssVar('ease-in-out-bezier-function');
   }
 
   @include e(input-calculator) {
@@ -288,11 +291,17 @@ $--input-inline-start: 7px !default;
 
   @include e(placeholder) {
     position: absolute;
-    top: 1px;
-    margin-inline-start: $--input-inline-start;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-inline-start: $input-inline-start;
     width: calc(100% - 52px);
+    @include utils-ellipsis;
+    color: var(
+      #{getCssVarName('input-text-color')},
+      map.get($input, 'text-color')
+    );
     @include when(transparent) {
-      opacity: 0.3;
+      color: getCssVar('text-color', 'placeholder');
     }
   }
 
@@ -300,22 +309,28 @@ $--input-inline-start: 7px !default;
     box-sizing: border-box;
     border-color: transparent;
     margin: 2px 0 2px 6px;
-    background-color: #f0f2f5;
+    background-color: getCssVar('fill-color');
 
     .#{$namespace}-icon-close {
-      background-color: $--color-text-placeholder;
+      background-color: getCssVar('text-color', 'placeholder');
       right: -7px;
-      top: 0;
-      color: $--color-white;
+      color: getCssVar('color-white');
 
       &:hover {
-        background-color: $--color-text-secondary;
+        background-color: getCssVar('text-color', 'secondary');
       }
 
       &::before {
         display: block;
         transform: translate(0, 0.5px);
       }
+    }
+  }
+
+  &.#{$namespace}-select-v2--small {
+    .#{$namespace}-select-v2__selection .#{$namespace}-tag {
+      margin: 1px 0 1px 6px;
+      height: 18px;
     }
   }
 }
